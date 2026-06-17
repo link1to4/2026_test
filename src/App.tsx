@@ -148,11 +148,10 @@ export default function App() {
       if (res.isCorrect) {
         updatedStats.totalCorrect += 1;
 
-        // CRITICAL DESTRUCTIVE CORRECTION REQUIREMENT:
-        // When a question is answered CORRECTLY during a retest or practice,
-        // we remove it from the wrongPool so they can gradually reach 100% clear.
+        // Keep the question in the wrongRecords pool even when answered correctly
+        // to allow continued review/re-testing ("答錯的題目 重測答對後也要可以重新作答").
         if (updatedStats.wrongRecords[qid]) {
-          delete updatedStats.wrongRecords[qid];
+          updatedStats.wrongRecords[qid].lastAttemptAt = now;
         }
       } else {
         updatedStats.totalWrong += 1;

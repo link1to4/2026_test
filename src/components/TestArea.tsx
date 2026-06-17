@@ -44,6 +44,16 @@ export default function TestArea({ questions, mode, onFinishSession, onExit }: T
     setIsSubmitted(false);
   }, [currentIndex]);
 
+  // Auto advance to the next question 1 second after an answer is submitted
+  useEffect(() => {
+    if (isSubmitted) {
+      const timer = setTimeout(() => {
+        handleNext();
+      }, 1000); // 1000ms delay to let user see feedback clearly before auto advancing
+      return () => clearTimeout(timer);
+    }
+  }, [isSubmitted, currentIndex]);
+
   if (totalQuestions === 0) {
     return (
       <div className="bg-white border border-editorial-border p-12 text-center max-w-lg mx-auto rounded-none shadow-sm" id="test-empty">
@@ -356,14 +366,32 @@ export default function TestArea({ questions, mode, onFinishSession, onExit }: T
                 )}
 
                 {isSubmitted && (
-                  <button
-                    onClick={handleNext}
-                    className="bg-[#1A1A1A] hover:bg-black text-white text-[10px] font-bold uppercase tracking-widest py-3 px-6 transition duration-150 flex items-center gap-2 active:scale-95 cursor-pointer"
-                    id="btn-next-question"
-                  >
-                    {currentIndex === totalQuestions - 1 ? "完成並查看報告 Finish" : "下一題 Next Question"}
-                    <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSubmitted(false);
+                        setSelectedAnswers([]);
+                        const newResults = { ...sessionResults };
+                        delete newResults[currentQuestion.id];
+                        setSessionResults(newResults);
+                      }}
+                      className="bg-white hover:bg-editorial-stone text-editorial-ink border border-editorial-ink text-[10px] font-bold uppercase tracking-widest py-3 px-5 transition duration-150 flex items-center gap-1 active:scale-95 cursor-pointer"
+                      id="btn-retry-individual-question"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '3s' }} />
+                      重新作答 Retry
+                    </button>
+
+                    <button
+                      onClick={handleNext}
+                      className="bg-[#1A1A1A] hover:bg-black text-white text-[10px] font-bold uppercase tracking-widest py-3 px-6 transition duration-150 flex items-center gap-2 active:scale-95 cursor-pointer"
+                      id="btn-next-question"
+                    >
+                      {currentIndex === totalQuestions - 1 ? "完成並查看報告 Finish" : "下一題 Next Question"}
+                      <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </button>
+                  </>
                 )}
               </div>
             </div>
