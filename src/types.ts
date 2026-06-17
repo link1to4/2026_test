@@ -17,6 +17,8 @@ export interface Question {
   options: string[];  // The parsed options list (e.g. ["答案A", "答案B", "答案C", "以上皆是"])
   answer: string;     // The raw answer string (e.g. "O", "4", "12")
   parsedAnswers: string[]; // Parsed standard answers (e.g. ["O"] for YesNo, ["4"] for Single, ["1", "2"] for Multiple)
+  source?: string;    // 題目出處
+  explanation?: string; // 正解 / 題目解析
 }
 
 export interface WrongRecord {

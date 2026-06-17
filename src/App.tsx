@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Question, QuestionType, UserStats, TestMode, SessionState } from "./types";
 import { defaultQuestions } from "./data/defaultQuestions";
+import { parseCSVQuestions } from "./utils/parser";
 import Dashboard from "./components/Dashboard";
 import TestArea from "./components/TestArea";
 import QuestionList from "./components/QuestionList";
@@ -43,20 +44,8 @@ export default function App() {
   // 3. Active Test / Session State
   const [activeSession, setActiveSession] = useState<SessionState | null>(null);
 
-  // Load from LocalStorage on mount
+  // Load from LocalStorage or CSV on mount
   useEffect(() => {
-    const cachedQuestions = localStorage.getItem(STORAGE_QUESTIONS_KEY);
-    if (cachedQuestions) {
-      try {
-        setQuestions(JSON.parse(cachedQuestions));
-      } catch (e) {
-        setQuestions(defaultQuestions);
-      }
-    } else {
-      setQuestions(defaultQuestions);
-      localStorage.setItem(STORAGE_QUESTIONS_KEY, JSON.stringify(defaultQuestions));
-    }
-
     const cachedStats = localStorage.getItem(STORAGE_STATS_KEY);
     if (cachedStats) {
       try {
@@ -64,6 +53,52 @@ export default function App() {
       } catch (e) {
         // use default empty stats
       }
+    }
+
+    const cachedQuestions = localStorage.getItem(STORAGE_QUESTIONS_KEY);
+    if (cachedQuestions) {
+      try {
+        const parsed = JSON.parse(cachedQuestions);
+        if (parsed.length === 0) {
+          // If empty, auto-load from ./tests.csv
+          fetch("./tests.csv")
+            .then((res) => res.text())
+            .then((text) => {
+              const csvQuestions = parseCSVQuestions(text);
+              if (csvQuestions.length > 0) {
+                setQuestions(csvQuestions);
+                localStorage.setItem(STORAGE_QUESTIONS_KEY, JSON.stringify(csvQuestions));
+              } else {
+                setQuestions([]);
+              }
+            })
+            .catch((err) => {
+              console.error("Error fetching tests.csv", err);
+              setQuestions([]);
+            });
+        } else {
+          setQuestions(parsed);
+        }
+      } catch (e) {
+        setQuestions([]);
+      }
+    } else {
+      // First boot: fetch tests.csv
+      fetch("./tests.csv")
+        .then((res) => res.text())
+        .then((text) => {
+          const csvQuestions = parseCSVQuestions(text);
+          if (csvQuestions.length > 0) {
+            setQuestions(csvQuestions);
+            localStorage.setItem(STORAGE_QUESTIONS_KEY, JSON.stringify(csvQuestions));
+          } else {
+            setQuestions([]);
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching tests.csv", err);
+          setQuestions([]);
+        });
     }
   }, []);
 
@@ -221,11 +256,32 @@ export default function App() {
     }
   };
 
-  // Restore defaults / Clear entire library
-  const handleRestoreDefaultQuestions = () => {
-    if (window.confirm("您確定要將整個題庫完全清空重置嗎？這將會移除當前所有的自訂題目。")) {
+  // Sync/Reload from tests.csv
+  const handleSyncFromCSV = () => {
+    if (window.confirm("您確定要從 ./tests.csv 重新載入所有題庫嗎？這將會覆寫當前本機的題庫內容。")) {
+      fetch("./tests.csv")
+        .then((res) => res.text())
+        .then((text) => {
+          const csvQuestions = parseCSVQuestions(text);
+          if (csvQuestions.length > 0) {
+            saveQuestions(csvQuestions);
+            alert(`成功！已成功從 tests.csv 載入並同步 ${csvQuestions.length} 題題目！`);
+          } else {
+            alert("讀取 csv 內容時未偵測到有效題目，請確認 CSV 格式。");
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          alert("無法連線讀取 ./tests.csv 資料，請確認檔案格式或連線。");
+        });
+    }
+  };
+
+  // Complete clean trigger
+  const handleClearLibraryOnly = () => {
+    if (window.confirm("您確定要將當前所有的題目完全清空嗎？清空後系統將呈現空白狀態。")) {
       saveQuestions([]);
-      alert("題庫已成功清空！");
+      alert("題庫已成功完全清空！");
     }
   };
 
@@ -332,19 +388,32 @@ export default function App() {
               onClearWrongRecord={handleClearWrongRecord}
             />
 
-            {/* Clear database action */}
-            <div className="bg-editorial-stone rounded-none border border-editorial-border p-6 flex flex-col sm:flex-row items-center justify-between gap-6" id="restore-default-panel">
-              <div className="space-y-1 text-center sm:text-left">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-editorial-ink">完全清空本機題庫</h4>
-                <p className="text-xs text-editorial-muted">想要清除當前所有的本機考題內容嗎？這項动作將會重設並清空現有練習題集。</p>
+            {/* CSV Sync and Clear databases panel */}
+            <div className="bg-editorial-stone rounded-none border border-editorial-border p-6 flex flex-col md:flex-row items-center justify-between gap-6" id="restore-default-panel">
+              <div className="space-y-1 text-center md:text-left">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-editorial-ink">本機題庫重設與 CSV 同步設定</h4>
+                <p className="text-xs text-editorial-muted">
+                  您可以自 <code className="bg-white/80 px-1 py-0.5 rounded text-mono font-bold font-mono">./tests.csv</code> 格式化檔案重新載入或將本機練習題庫完全清空。
+                </p>
               </div>
-              <button
-                onClick={handleRestoreDefaultQuestions}
-                className="w-full sm:w-auto px-5 py-2.5 bg-white border border-[#D9534F] hover:bg-[#D9534F] hover:text-white text-[10px] font-bold uppercase tracking-widest text-[#D9534F] transition duration-200 rounded-none cursor-pointer"
-                id="btn-trigger-restore"
-              >
-                清空題庫 Clear Library
-              </button>
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                <button
+                  type="button"
+                  onClick={handleSyncFromCSV}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-white border border-editorial-ink hover:bg-editorial-ink hover:text-white text-[10px] font-bold uppercase tracking-widest text-editorial-ink transition duration-200 rounded-none cursor-pointer"
+                  id="btn-sync-csv"
+                >
+                  從 tests.csv 重新載入題庫 Sync CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearLibraryOnly}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-white border border-[#D9534F] hover:bg-[#D9534F] hover:text-white text-[10px] font-bold uppercase tracking-widest text-[#D9534F] transition duration-200 rounded-none cursor-pointer"
+                  id="btn-trigger-restore"
+                >
+                  清空本機題庫 Clear Library
+                </button>
+              </div>
             </div>
           </div>
         )}

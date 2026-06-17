@@ -48,6 +48,8 @@ export default function QuestionList({
   const [manualStem, setManualStem] = useState("");
   const [manualAnswer, setManualAnswer] = useState("");
   const [manualOptions, setManualOptions] = useState<string[]>(["", "", "", ""]);
+  const [manualSource, setManualSource] = useState("");
+  const [manualExplanation, setManualExplanation] = useState("");
   const [manualErrorMsg, setManualErrorMsg] = useState("");
 
   // Bulk Paste Form states
@@ -122,7 +124,9 @@ export default function QuestionList({
       answer: manualAnswer.trim(),
       parsedAnswers: manualType === QuestionType.YesNo 
         ? [manualAnswer.trim().toUpperCase()] 
-        : (manualType === QuestionType.Multiple ? manualAnswer.trim().split("") : [manualAnswer.trim()])
+        : (manualType === QuestionType.Multiple ? manualAnswer.trim().split("") : [manualAnswer.trim()]),
+      source: manualSource.trim() || undefined,
+      explanation: manualExplanation.trim() || undefined
     };
 
     onAddQuestions([newQuestion]);
@@ -132,6 +136,8 @@ export default function QuestionList({
     setManualStem("");
     setManualAnswer("");
     setManualOptions(["", "", "", ""]);
+    setManualSource("");
+    setManualExplanation("");
     setIsAddingManual(false);
   };
 
@@ -388,6 +394,32 @@ export default function QuestionList({
             </div>
           )}
 
+          {/* Metadata: Source and Explanation */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-editorial-muted mb-1.5">題目出處</label>
+              <input
+                type="text"
+                value={manualSource}
+                onChange={(e) => setManualSource(e.target.value)}
+                placeholder="例如: 112會考、第二單元"
+                className="w-full bg-white border border-editorial-border focus:border-editorial-ink px-3 py-2.5 rounded-none text-xs text-editorial-ink focus:outline-none"
+                id="input-manual-source"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-editorial-muted mb-1.5">正解解析 / 說明 (Explanation)</label>
+              <input
+                type="text"
+                value={manualExplanation}
+                onChange={(e) => setManualExplanation(e.target.value)}
+                placeholder="請輸入詳盡解析或解題概念..."
+                className="w-full bg-white border border-editorial-border focus:border-editorial-ink px-3 py-2.5 rounded-none text-xs text-editorial-ink focus:outline-none"
+                id="input-manual-explanation"
+              />
+            </div>
+          </div>
+
           {manualErrorMsg && (
             <p className="text-xs text-[#AA3333] bg-[#FFF5F5] border border-[#FFCCCC] px-4 py-3 rounded-none flex items-center gap-2 font-serif italic">
               <AlertCircle className="w-4 h-4" />
@@ -496,9 +528,16 @@ export default function QuestionList({
                 <div>
                   {/* ID and Tag Row */}
                   <div className="flex items-center justify-between mb-4 text-[10px]">
-                    <span className="font-bold font-mono text-editorial-ink border border-editorial-ink px-2 py-0.5">
-                      {q.id}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold font-mono text-editorial-ink border border-editorial-ink px-2 py-0.5">
+                        {q.id}
+                      </span>
+                      {q.source && (
+                        <span className="text-[9px] bg-editorial-stone border border-editorial-border px-2 py-0.5 text-editorial-muted font-serif italic">
+                          出處: {q.source}
+                        </span>
+                      )}
+                    </div>
 
                     <div className="flex items-center gap-2">
                       {/* Error Counter Indicator (MANDATORY WRONG RECORD TRACING) */}
@@ -541,6 +580,13 @@ export default function QuestionList({
                           </div>
                         );
                       })}
+                    </div>
+                  )}
+
+                  {q.explanation && (
+                    <div className="mt-3 mb-4 p-3 bg-editorial-stone border border-editorial-border rounded-none text-[11px] font-serif italic text-editorial-ink select-none leading-relaxed">
+                      <span className="font-bold font-sans not-italic block mb-1 text-[9px] uppercase tracking-wider text-editorial-warm-taupe">💡 解析 / 說明 (Explanation)</span>
+                      {q.explanation}
                     </div>
                   )}
                 </div>

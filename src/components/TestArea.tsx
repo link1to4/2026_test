@@ -203,10 +203,17 @@ export default function TestArea({ questions, mode, onFinishSession, onExit }: T
             id={`quiz-card-${currentQuestion.id}`}
           >
             {/* Meta row */}
-            <div className="flex items-center justify-between border-b border-editorial-stone pb-4">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-[#888]">
-                ID: {currentQuestion.id}
-              </span>
+            <div className="flex flex-wrap gap-2 items-center justify-between border-b border-editorial-stone pb-4">
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-[#888]">
+                  ID: {currentQuestion.id}
+                </span>
+                {currentQuestion.source && (
+                  <span className="text-[10px] bg-editorial-stone border border-editorial-border px-2 py-0.5 text-editorial-warm-taupe font-serif italic">
+                    出處: {currentQuestion.source}
+                  </span>
+                )}
+              </div>
 
               <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-editorial-warm-taupe">
                 Type • {currentQuestion.type}
@@ -338,6 +345,16 @@ export default function TestArea({ questions, mode, onFinishSession, onExit }: T
                     </span>
                   )}
                 </p>
+
+                {currentQuestion.explanation && (
+                  <div className="mt-3 pt-3 border-t border-black/10 text-xs font-serif leading-relaxed text-black/90">
+                    <span className="font-bold block mb-1 text-[11px] uppercase tracking-wider text-editorial-warm-taupe">💡 正解與解析 Explanation：</span>
+                    <p className="bg-white/50 p-3 border border-editorial-border font-serif italic text-editorial-ink">
+                      {currentQuestion.explanation}
+                    </p>
+                  </div>
+                )}
+
                 <p className="text-[11px] opacity-75 font-serif italic pt-1 border-t border-black/10 flex items-start gap-1">
                   <HelpCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                   此題對錯已列入歷史紀錄。若本題作答錯誤，將會自動鎖定入「待複習錯題庫」，以便您在大廳隨時開啟獨立高強度重載。

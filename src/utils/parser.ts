@@ -187,3 +187,106 @@ export function parseQuestionLines(text: string): Question[] {
 
   return questions;
 }
+
+/**
+ * Parses full CSV text (with header: 編號,題型,答案,題目內容,題目出處,正解)
+ * into Question objects.
+ */
+export function parseCSVQuestions(csvText: string): Question[] {
+  const lines: string[] = [];
+  let currentLine = "";
+  let inQuotes = false;
+
+  // Split into lines respecting quotes
+  for (let i = 0; i < csvText.length; i++) {
+    const char = csvText[i];
+    if (char === '"') {
+      if (inQuotes && csvText[i + 1] === '"') {
+        currentLine += '"';
+        i++; // skip next quote
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && csvText[i + 1] === '\n') {
+        i++;
+      }
+      lines.push(currentLine);
+      currentLine = "";
+    } else {
+      currentLine += char;
+    }
+  }
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  const questions: Question[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+
+    // Helper to parse CSV elements in a line
+    const columns: string[] = [];
+    let col = "";
+    let colInQuotes = false;
+    for (let j = 0; j < line.length; j++) {
+      const char = line[j];
+      if (char === '"') {
+        if (colInQuotes && line[j + 1] === '"') {
+          col += '"';
+          j++;
+        } else {
+          colInQuotes = !colInQuotes;
+        }
+      } else if (char === ',' && !colInQuotes) {
+        columns.push(col);
+        col = "";
+      } else {
+        col += char;
+      }
+    }
+    columns.push(col);
+
+    // Skip header line
+    if (columns[0]?.trim().includes("編號")) {
+      continue;
+    }
+
+    if (columns.length >= 4) {
+      const id = columns[0].trim();
+      const typeStr = columns[1].trim();
+      const rawAnswer = columns[2].trim();
+      const rawContent = columns[3].trim();
+      const source = columns[4] ? columns[4].trim() : "";
+      const explanation = columns[5] ? columns[5].trim() : "";
+
+      if (!id || !typeStr) continue;
+
+      let type = QuestionType.Single;
+      if (typeStr === "是非題" || typeStr.includes("是非")) {
+        type = QuestionType.YesNo;
+      } else if (typeStr === "複選題" || typeStr.includes("複選") || typeStr.includes("多選")) {
+        type = QuestionType.Multiple;
+      }
+
+      const parsed = parseOptionsAndStem(rawContent);
+      const parsedAnswers = parseAnswers(type, rawAnswer);
+
+      questions.push({
+        id,
+        type,
+        rawContent,
+        stem: parsed.stem,
+        options: parsed.options,
+        answer: rawAnswer,
+        parsedAnswers,
+        source,
+        explanation,
+      });
+    }
+  }
+
+  return questions;
+}
