@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Custom Editorial Colors */
+  --color-editorial-paper: #FDFCFB;
+  --color-editorial-ink: #1A1A1A;
+  --color-editorial-border: #E5E5E1;
+  --color-editorial-stone: #F5F5F0;
+  --color-editorial-warm-taupe: #A69D91;
+  --color-editorial-muted: #888888;
+  --color-editorial-error: #D9534F;
+  --color-editorial-success: #5CB85C;
+}
+
+/* Custom global overrides to enforce the editorial atmosphere */
+body {
+  background-color: var(--color-editorial-paper);
+  color: var(--color-editorial-ink);
+  font-family: var(--font-sans);
+}
+
+/* Custom classes for borders and items */
+.editorial-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-editorial-border);
+  border-radius: 0px; /* Sharp corners for modern newspaper look */
+}
+
+/* Scrollbar adjustment */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-editorial-paper);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-editorial-border);
+  border-radius: 3px;
+}

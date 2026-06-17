@@ -1,0 +1,6 @@
+{
+  "name": "會考題庫與測驗",
+  "description": "專為會考是非題、單選題、複選題設計的智慧練習平台。支援即時答題紀錄、錯題對象獨立重測、測驗與看題模式、以及自訂題目匯入，助您高效攻克各大考試。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
