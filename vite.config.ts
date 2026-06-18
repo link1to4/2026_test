@@ -13,7 +13,7 @@ export default defineConfig(() => {
     },
     server: {
       host: '0.0.0.0',
-      allowedHosts: 'all',
+      allowedHosts: ['test-l28s.onrender.com'],
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
