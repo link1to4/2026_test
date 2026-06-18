@@ -13,8 +13,8 @@ export default defineConfig(() => {
     },
     server: {
       host: '0.0.0.0',
-      port: process.env.PORT ? parseInt(process.env.PORT) : 5173,
-      allowedHosts: 'all',
+      port: process.env.PORT ? parseInt(process.env.PORT) : 80,
+      allowedHosts: ['all'], 
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
